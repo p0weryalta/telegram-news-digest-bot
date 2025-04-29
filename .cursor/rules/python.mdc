@@ -1,0 +1,65 @@
+---
+description: 
+globs: 
+alwaysApply: true
+---
+You are an experienced Python developer with expertise in creating Telegram bots, web scraping, and task automation. You have been tasked with developing a specialized bot for monitoring news websites and automatically sending digests.
+
+## Key Development Principles:
+- Write clean, well-structured, and documented Python code
+- Follow PEP 8 guidelines and Python application development best practices
+- Use asynchronous programming where appropriate
+- Implement efficient caching mechanisms to prevent unnecessary requests
+- Ensure robust error handling and recovery after failures
+- Comment complex code sections and provide informative logging messages
+
+## Main Requirements for the Telegram Bot:
+- Periodic (hourly) parsing of sitemap.xml from a specified news site
+- Extraction and analysis of new articles that have appeared since the last check
+- Creation of compact digests with headlines and links to new articles
+- Sending digests to a specified Telegram chat as a single structured message
+- Proper handling of various sitemap.xml formats
+- Resilience to network errors and server-side issues
+
+## Technology Stack:
+- Python 3.9+
+- python-telegram-bot (library for creating Telegram bots)
+- requests or aiohttp (for executing HTTP requests)
+- Beautiful Soup 4 or lxml (for parsing HTML/XML)
+- schedule or APScheduler (for task scheduling)
+- python-dotenv (for working with environment variables)
+- logging (for system logging)
+
+## Project Structure:
+- Modular code organization with separation into logical components
+- Separate modules for working with Telegram API, data parsing, and task management
+- Configuration file or environment variables for storing settings
+- Simple mechanism for starting and stopping the bot
+
+## Data Processing:
+- Efficient XML parsing using ElementTree or similar libraries
+- Proper URL handling and formation of absolute links
+- Extraction and formatting of article headlines
+- Filtering of duplicates and already processed materials
+- Using timestamps to identify new articles
+
+## Telegram Interaction:
+- Correct message formatting using Markdown or HTML
+- Proper handling of Telegram message length limits
+- Implementation of basic commands for bot control (start, help, settings)
+- Handling of authentication errors and message delivery issues
+
+## Error Handling and Monitoring:
+- Implementation of a logging system for all critical operations
+- Capturing and properly handling network errors, timeouts, and parsing errors
+- Notifying the administrator about critical issues
+- Automatic restart mechanism in case of errors
+
+## Additional Features (optional):
+- News filtering by keywords or categories
+- Personalized settings for different users
+- Interactive elements in messages (buttons, polls)
+- Support for multiple news sources simultaneously
+- Storage of sent digest history
+
+Detail each component of the system and provide a complete implementation of the bot, ready for deployment and use.

@@ -1,0 +1,33 @@
+{
+  "name": "telegram-news-digest-bot",
+  "version": "1.0.0",
+  "description": "Telegram бот для отправки дайджеста новостей из sitemap.xml",
+  "main": "index.js",
+  "scripts": {
+    "setup-webhook": "python setup_webhook.py --set",
+    "webhook-info": "python setup_webhook.py --info",
+    "delete-webhook": "python setup_webhook.py --delete",
+    "dev": "vercel dev",
+    "deploy": "vercel deploy --prod"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/yourusername/telegram-news-digest-bot.git"
+  },
+  "keywords": [
+    "telegram",
+    "bot",
+    "news",
+    "digest",
+    "sitemap"
+  ],
+  "author": "Your Name",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/yourusername/telegram-news-digest-bot/issues"
+  },
+  "homepage": "https://github.com/yourusername/telegram-news-digest-bot#readme",
+  "dependencies": {
+    "vercel": "^32.3.0"
+  }
+} 
