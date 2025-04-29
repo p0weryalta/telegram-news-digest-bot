@@ -16,24 +16,36 @@ lib64/
 parts/
 sdist/
 var/
+wheels/
 *.egg-info/
 .installed.cfg
 *.egg
 
-# Environment variables
+# Environments
 .env
+.venv
+env/
+venv/
+ENV/
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# Project specific
+last_articles.json
+*.log
+
+# Environment variables
 .env.local
 .env.*.local
 
 # Vercel
 .vercel
 
-# IDE
-.vscode/
-.idea/
-*.swp
-*.swo
-
 # OS
 .DS_Store
 Thumbs.db
+.env*.local

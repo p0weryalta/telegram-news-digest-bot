@@ -16,7 +16,7 @@ if not SITEMAP_URL:
 
 # Настройки дайджеста
 DIGEST_CHAT_ID = os.getenv('DIGEST_CHAT_ID')  # ID чата для отправки дайджеста
-MAX_ARTICLES_IN_DIGEST = int(os.getenv('MAX_ARTICLES_IN_DIGEST', '10'))  # Максимальное число статей в дайджесте
+MAX_ARTICLES_IN_DIGEST = int(os.getenv('MAX_ARTICLES_IN_DIGEST', '50'))  # Максимальное число статей в дайджесте
 DIGEST_INTERVAL_HOURS = int(os.getenv('DIGEST_INTERVAL_HOURS', '1'))  # Интервал отправки дайджеста (в часах)
 
 # Другие настройки

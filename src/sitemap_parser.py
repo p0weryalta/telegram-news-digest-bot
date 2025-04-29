@@ -85,7 +85,7 @@ class SitemapParser:
             # Получаем заголовки статей
             new_articles = []
             # Ограничиваем количество статей для обработки, чтобы не перегружать ресурсы
-            max_articles_to_process = 20
+            max_articles_to_process = 100
             for i, url in enumerate(list(articles.keys())[:max_articles_to_process]):
                 try:
                     title = self._get_article_title(url)

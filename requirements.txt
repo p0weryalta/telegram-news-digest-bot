@@ -1,6 +1,7 @@
-python-telegram-bot>=20.0
-requests
-python-dotenv
-beautifulsoup4
-lxml
-vercel-kv>=0.1.5 
+python-telegram-bot==20.8
+requests==2.31.0
+python-dotenv==1.0.1
+beautifulsoup4==4.12.3
+lxml==5.1.0
+vercel-kv>=0.1.5
+schedule==1.2.1 
