@@ -38,13 +38,18 @@ async def start_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     from telegram import InlineKeyboardButton, InlineKeyboardMarkup
     
     keyboard = [
-        [InlineKeyboardButton("Проверить сейчас", callback_data="check_now")]
+        [
+            InlineKeyboardButton("📰 Получить дайджест", callback_data="check_now"),
+            InlineKeyboardButton("ℹ️ Помощь", callback_data="help")
+        ]
     ]
     reply_markup = InlineKeyboardMarkup(keyboard)
     
     await update.message.reply_text(
-        f'Привет, {update.effective_user.first_name}! Я бот для отправки дайджеста новостей.\n\n'
-        f'Я периодически проверяю sitemap.xml указанного сайта и отправляю подборку новых статей.',
+        f'👋 Здравствуйте, {update.effective_user.first_name}!\n\n'
+        f'Я бот для мониторинга новостей через sitemap.xml. Каждые {DIGEST_INTERVAL_HOURS} часов '
+        f'я проверяю обновления и отправляю дайджест с новыми статьями.\n\n'
+        f'🔍 Вы можете получить дайджест прямо сейчас, нажав кнопку ниже.',
         reply_markup=reply_markup
     )
 
@@ -53,131 +58,172 @@ async def help_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     from telegram import InlineKeyboardButton, InlineKeyboardMarkup
     
     keyboard = [
-        [InlineKeyboardButton("Проверить сейчас", callback_data="check_now")]
+        [
+            InlineKeyboardButton("📰 Получить дайджест", callback_data="check_now"),
+            InlineKeyboardButton("⚙️ Настройки", callback_data="settings")
+        ]
     ]
     reply_markup = InlineKeyboardMarkup(keyboard)
     
     await update.message.reply_text(
-        'Список доступных команд:\n'
-        '/start - начать работу с ботом\n'
-        '/help - показать справку\n'
-        '/digest - запросить дайджест прямо сейчас\n'
-        '/setchat - установить текущий чат для отправки дайджеста (только для админа)',
+        '📋 Доступные команды:\n\n'
+        '🔹 /start - запустить бота\n'
+        '🔹 /help - показать это сообщение\n'
+        '🔹 /digest - получить свежий дайджест\n'
+        '🔹 /status - проверить статус бота\n'
+        '🔹 /settings - настройки уведомлений\n'
+        f'🔹 /setchat - установить чат для дайджеста (только для админа)\n\n'
+        f'⏰ Автоматическая отправка дайджеста: каждые {DIGEST_INTERVAL_HOURS} часов\n'
+        f'📊 Максимум статей в дайджесте: {MAX_ARTICLES_IN_DIGEST}',
         reply_markup=reply_markup
     )
 
 async def digest_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    """Обработчик команды /digest - отправляет дайджест по запросу"""
+    """Обработчик команды /digest"""
     from telegram import InlineKeyboardButton, InlineKeyboardMarkup
     
-    await update.message.reply_text('Запрашиваю новые статьи... Пожалуйста, подождите.')
+    progress_message = await update.message.reply_text('🔄 Собираю свежие новости... Пожалуйста, подождите.')
     
     try:
-        # Парсим sitemap и получаем новые статьи
         articles = sitemap_parser.parse_sitemap()
         
         if not articles:
             keyboard = [
-                [InlineKeyboardButton("Проверить снова", callback_data="check_now")]
+                [InlineKeyboardButton("🔄 Проверить снова", callback_data="check_now")]
             ]
             reply_markup = InlineKeyboardMarkup(keyboard)
-            await update.message.reply_text(
-                'Нет новых статей для отображения.',
+            await progress_message.edit_text(
+                '📭 Новых статей пока нет.\n'
+                'Попробуйте проверить позже.',
                 reply_markup=reply_markup
             )
             return
         
-        # Форматируем дайджест
         digest_text = sitemap_parser.format_digest(articles, MAX_ARTICLES_IN_DIGEST)
         
-        # Создаем клавиатуру с кнопкой для повторной проверки
         keyboard = [
-            [InlineKeyboardButton("Проверить снова", callback_data="check_now")]
+            [
+                InlineKeyboardButton("🔄 Обновить", callback_data="check_now"),
+                InlineKeyboardButton("⚙️ Настройки", callback_data="settings")
+            ]
         ]
         reply_markup = InlineKeyboardMarkup(keyboard)
         
-        # Отправляем дайджест
-        await update.message.reply_text(
-            digest_text,
+        await progress_message.edit_text(
+            f'📰 Свежий дайджест:\n\n{digest_text}',
             parse_mode='Markdown',
             disable_web_page_preview=True,
             reply_markup=reply_markup
         )
     except Exception as e:
-        logger.error(f"Ошибка при обработке команды digest: {e}")
-        await update.message.reply_text(f'Произошла ошибка: {str(e)}')
+        logger.error(f"Ошибка при формировании дайджеста: {e}")
+        await progress_message.edit_text(
+            '❌ Произошла ошибка при получении новостей.\n'
+            'Пожалуйста, попробуйте позже или обратитесь к администратору.'
+        )
 
-async def setchat_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    """Обработчик команды /setchat - устанавливает текущий чат для отправки дайджеста"""
+async def status_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """Обработчик команды /status"""
+    try:
+        chat_id = os.getenv('DIGEST_CHAT_ID', 'Не установлен')
+        await update.message.reply_text(
+            '📊 Статус бота:\n\n'
+            f'🔹 Мониторинг: {SITEMAP_URL}\n'
+            f'🔹 Интервал проверки: {DIGEST_INTERVAL_HOURS} часов\n'
+            f'🔹 Чат для дайджеста: {chat_id}\n'
+            f'🔹 Максимум статей: {MAX_ARTICLES_IN_DIGEST}'
+        )
+    except Exception as e:
+        logger.error(f"Ошибка при получении статуса: {e}")
+        await update.message.reply_text('❌ Ошибка при получении статуса бота')
+
+async def settings_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """Обработчик команды /settings"""
     from telegram import InlineKeyboardButton, InlineKeyboardMarkup
     
-    # Проверяем, является ли пользователь администратором
-    if ADMIN_ID and str(update.effective_user.id) != ADMIN_ID:
-        await update.message.reply_text('У вас нет прав для выполнения этой команды')
-        return
-    
-    chat_id = update.effective_chat.id
-    
-    # Здесь нужно сохранить ID чата куда-то, откуда его можно будет извлечь при выполнении cron-задачи
-    # В Vercel лучше использовать базу данных или KV-хранилище
-    # Для примера, запишем в переменную окружения (не будет работать между деплоями)
-    os.environ['DIGEST_CHAT_ID'] = str(chat_id)
-    
     keyboard = [
-        [InlineKeyboardButton("Проверить сейчас", callback_data="check_now")]
+        [InlineKeyboardButton("📱 Настроить уведомления", callback_data="notifications")],
+        [InlineKeyboardButton("⏰ Изменить время отправки", callback_data="change_time")],
+        [InlineKeyboardButton("📊 Количество статей", callback_data="article_count")]
     ]
     reply_markup = InlineKeyboardMarkup(keyboard)
     
     await update.message.reply_text(
-        f'Текущий чат (ID: {chat_id}) установлен для отправки дайджеста',
+        '⚙️ Настройки:\n\n'
+        'Выберите параметр для настройки:',
         reply_markup=reply_markup
+    )
+
+async def setchat_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """Обработчик команды /setchat"""
+    if ADMIN_ID and str(update.effective_user.id) != ADMIN_ID:
+        await update.message.reply_text('⛔️ У вас нет прав для выполнения этой команды')
+        return
+    
+    chat_id = update.effective_chat.id
+    os.environ['DIGEST_CHAT_ID'] = str(chat_id)
+    
+    await update.message.reply_text(
+        f'✅ Чат успешно установлен\n\n'
+        f'🔹 ID чата: {chat_id}\n'
+        f'🔹 Дайджесты будут отправляться сюда каждые {DIGEST_INTERVAL_HOURS} часов'
     )
 
 # Обработчик для inline кнопок
 async def button_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
     """Обработчик нажатий inline кнопок"""
-    from telegram import InlineKeyboardButton, InlineKeyboardMarkup
-    
     query = update.callback_query
-    await query.answer()  # Отвечаем на запрос, чтобы убрать "часики" с кнопки
+    await query.answer()
     
     if query.data == "check_now":
-        await query.edit_message_text("Запрашиваю новые статьи... Пожалуйста, подождите.")
+        await query.edit_message_text("🔄 Собираю свежие новости... Пожалуйста, подождите.")
         
         try:
-            # Парсим sitemap и получаем новые статьи
             articles = sitemap_parser.parse_sitemap()
             
             if not articles:
                 keyboard = [
-                    [InlineKeyboardButton("Проверить снова", callback_data="check_now")]
+                    [InlineKeyboardButton("🔄 Проверить снова", callback_data="check_now")]
                 ]
                 reply_markup = InlineKeyboardMarkup(keyboard)
                 await query.edit_message_text(
-                    'Нет новых статей для отображения.',
+                    '📭 Новых статей пока нет.\n'
+                    'Попробуйте проверить позже.',
                     reply_markup=reply_markup
                 )
                 return
             
-            # Форматируем дайджест
             digest_text = sitemap_parser.format_digest(articles, MAX_ARTICLES_IN_DIGEST)
             
-            # Создаем клавиатуру с кнопкой для повторной проверки
             keyboard = [
-                [InlineKeyboardButton("Проверить снова", callback_data="check_now")]
+                [
+                    InlineKeyboardButton("🔄 Обновить", callback_data="check_now"),
+                    InlineKeyboardButton("⚙️ Настройки", callback_data="settings")
+                ]
             ]
             reply_markup = InlineKeyboardMarkup(keyboard)
             
-            # Отправляем дайджест
             await query.edit_message_text(
-                digest_text,
+                f'📰 Свежий дайджест:\n\n{digest_text}',
                 parse_mode='Markdown',
                 disable_web_page_preview=True,
                 reply_markup=reply_markup
             )
         except Exception as e:
             logger.error(f"Ошибка при обработке кнопки check_now: {e}")
-            await query.edit_message_text(f'Произошла ошибка: {str(e)}')
+            await query.edit_message_text(
+                '❌ Произошла ошибка при получении новостей.\n'
+                'Пожалуйста, попробуйте позже или обратитесь к администратору.'
+            )
+    elif query.data == "help":
+        await help_command(update, context)
+    elif query.data == "settings":
+        await settings_command(update, context)
+    elif query.data in ["notifications", "change_time", "article_count"]:
+        await query.edit_message_text(
+            '🚧 Эта функция находится в разработке.\n'
+            'Она будет доступна в следующих обновлениях.'
+        )
 
 # Обработчик текстовых сообщений
 async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -187,17 +233,22 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
     text = update.message.text
     logger.info(f"Пользователь {update.effective_user.id} отправил сообщение: {text}")
     
-    # Для простых сообщений просто отвечаем базовой информацией с кнопкой
     keyboard = [
-        [InlineKeyboardButton("Проверить сейчас", callback_data="check_now")]
+        [
+            InlineKeyboardButton("📰 Получить дайджест", callback_data="check_now"),
+            InlineKeyboardButton("ℹ️ Помощь", callback_data="help")
+        ]
     ]
     reply_markup = InlineKeyboardMarkup(keyboard)
     
     await update.message.reply_text(
-        'Я бот для отправки дайджеста новостей. Используйте команды:\n'
-        '/start - начать работу с ботом\n'
-        '/help - показать доступные команды\n'
-        '/digest - запросить дайджест новостей',
+        '👋 Я бот для мониторинга новостей.\n\n'
+        'Доступные команды:\n'
+        '🔹 /start - запустить бота\n'
+        '🔹 /help - показать помощь\n'
+        '🔹 /digest - получить свежий дайджест\n'
+        '🔹 /status - проверить статус\n'
+        '🔹 /settings - настройки',
         reply_markup=reply_markup
     )
 
